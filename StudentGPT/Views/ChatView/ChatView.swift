@@ -10,11 +10,26 @@ import SwiftUI
 struct ChatView: View {
     @State private var inputText: String = ""
     
-    @State private var messages: [String] = []
+    @State private var messages: [Message] = [
+        Message(text: "Hello! Nigga!", isUser: true),
+        Message(text: "Hello! How can I help you?", isUser: false)
+    ]
     
     var body: some View {
         VStack() {
             Spacer()
+            
+            VStack(){
+                ScrollViewReader{ ScrollViewProxy in
+                    ScrollView{
+                        VStack(){
+                            ForEach(messages){ message in
+                                MessageBubble(message: message)
+                            }
+                        }
+                    }
+                }
+            }
             
             HStack(){
                 Image(systemName: "plus.circle")
