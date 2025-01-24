@@ -70,6 +70,11 @@ struct ChatView: View {
             let userMessage = Message(text: inputText, isUser: true)
             messages.append(userMessage)
             inputText = ""
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                let botMessage = Message(text: "You said: \(userMessage.text)", isUser: false)
+                messages.append(botMessage)
+            }
         }
     }
     
