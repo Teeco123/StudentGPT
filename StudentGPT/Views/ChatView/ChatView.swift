@@ -46,12 +46,16 @@ struct ChatView: View {
                 TextField("Message...", text: $inputText)
                     .foregroundColor(.white)
                     .padding(.trailing, 50)
-                Image(systemName: "paperplane")
-                    .foregroundColor(Color.white)
-                    .padding(.vertical, 10)
-                    .padding(.trailing, 20.0)
-                    .padding(.leading, -40.0)
-                    .font(.system(size: 20))
+                Button(action: {
+                    SendMessage()
+                }){
+                    Image(systemName: "paperplane")
+                        .foregroundColor(Color.white)
+                        .padding(.vertical, 10)
+                        .padding(.trailing, 20.0)
+                        .padding(.leading, -40.0)
+                        .font(.system(size: 20))
+                }
             }
             .frame(maxWidth: 370, maxHeight: 45, alignment: .leading)
             .background(Color(red: 0.1, green: 0.1, blue: 0.1))
@@ -60,7 +64,17 @@ struct ChatView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
     }
+    
+    private func SendMessage(){
+        if !inputText.isEmpty{
+            let userMessage = Message(text: inputText, isUser: true)
+            messages.append(userMessage)
+            inputText = ""
+        }
+    }
+    
 }
+
 
 #Preview {
     ChatView()
