@@ -6,11 +6,11 @@
 //
 
 import SwiftUI
-import Foundation
+import OpenAI
 
 struct ChatView: View {
     
-    let openAiKey = ProcessInfo.processInfo.environment["OPEN_AI_KEY"] ?? ""
+    let openAI = OpenAI(apiToken: ProcessInfo.processInfo.environment["OPEN_AI_KEY"] ?? "")
     
     @State private var inputText: String = ""
     
@@ -52,7 +52,9 @@ struct ChatView: View {
                     .padding()
                     .padding(.horizontal, -20.0)
                 Button(action: {
-                    SendMessage()
+                    Task{
+                        await SendMessage()
+                    }
                 }){
                     Image(systemName: "paperplane")
                         .foregroundColor(Color.white)
@@ -69,16 +71,25 @@ struct ChatView: View {
         .background(Color.black)
     }
     
-    private func SendMessage(){
+    private func SendMessage() async{
         if !inputText.isEmpty{
             let userMessage = Message(text: inputText, isUser: true)
             messages.append(userMessage)
             inputText = ""
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                let botMessage = Message(text: "You said: \(userMessage.text)", isUser: false)
-                messages.append(botMessage)
+            let chatQuery = ChatQuery(
+                messages: [.init(role: .user, content: userMessage.text)!], model: "gpt-4o-mini")
+            
+            do{
+                let result = try await openAI.chats(query: chatQuery)
+                let gptResponse = result.choices.last?.message.content?.string ?? "Error"
+                let gptMessage = Message(text: gptResponse, isUser: false)
+
+                messages.append(gptMessage)
+            } catch{
+                print("Error")
             }
+            
         }
     }
     
