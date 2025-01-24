@@ -11,7 +11,7 @@ import SwiftUI
 struct StudentGPTApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ChatView()
         }
     }
 }
