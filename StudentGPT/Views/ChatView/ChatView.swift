@@ -30,7 +30,7 @@ struct ChatView: View {
                         .padding()
                         .onChange(of: messages.count){
                             withAnimation{
-                                scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
+                                scrollViewProxy.scrollTo(messages[messages.count - 1].id, anchor: .bottom)
                             }
                         }
                     }
