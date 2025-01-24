@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct ChatView: View {
+    
+    let openAiKey = ProcessInfo.processInfo.environment["OPEN_AI_KEY"] ?? ""
+    
     @State private var inputText: String = ""
     
     @State private var messages: [Message] = [
