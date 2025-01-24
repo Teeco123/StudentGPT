@@ -10,6 +10,8 @@ import SwiftUI
 struct ChatView: View {
     @State private var inputText: String = ""
     
+    @State private var messages: [String] = []
+    
     var body: some View {
         VStack() {
             Spacer()
@@ -30,7 +32,7 @@ struct ChatView: View {
                     .padding(.leading, -40.0)
                     .font(.system(size: 20))
             }
-            .frame(maxWidth: 350, maxHeight: 45, alignment: .leading)
+            .frame(maxWidth: 370, maxHeight: 45, alignment: .leading)
             .background(Color(red: 0.1, green: 0.1, blue: 0.1))
             .cornerRadius(18)
         }
