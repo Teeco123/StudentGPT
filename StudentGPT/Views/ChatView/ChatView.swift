@@ -20,11 +20,17 @@ struct ChatView: View {
             Spacer()
             
             VStack(){
-                ScrollViewReader{ ScrollViewProxy in
+                ScrollViewReader{ scrollViewProxy in
                     ScrollView{
                         VStack(){
                             ForEach(messages){ message in
                                 MessageBubble(message: message)
+                            }
+                        }
+                        .padding()
+                        .onChange(of: messages.count){
+                            withAnimation{
+                                scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
                             }
                         }
                     }
