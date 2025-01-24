@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		E7E093B42D441722002C8F6A /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = E7E093B32D441722002C8F6A /* OpenAI */; };
+		E7E093CD2D445EBC002C8F6A /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = E7E093CC2D445EBC002C8F6A /* PostgREST */; };
+		E7E093CF2D445EBC002C8F6A /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = E7E093CE2D445EBC002C8F6A /* Storage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +29,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E7E093CF2D445EBC002C8F6A /* Storage in Frameworks */,
+				E7E093CD2D445EBC002C8F6A /* PostgREST in Frameworks */,
 				E7E093B42D441722002C8F6A /* OpenAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -71,6 +75,8 @@
 			name = StudentGPT;
 			packageProductDependencies = (
 				E7E093B32D441722002C8F6A /* OpenAI */,
+				E7E093CC2D445EBC002C8F6A /* PostgREST */,
+				E7E093CE2D445EBC002C8F6A /* Storage */,
 			);
 			productName = StudentGPT;
 			productReference = E7660BDD2D41C2C90055C10C /* StudentGPT.app */;
@@ -102,6 +108,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E7E093B22D441722002C8F6A /* XCRemoteSwiftPackageReference "OpenAI" */,
+				E7E093CB2D445EBB002C8F6A /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E7660BDE2D41C2C90055C10C /* Products */;
@@ -264,6 +271,8 @@
 				DEVELOPMENT_TEAM = P483V3BFS2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = StudentGPT;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -293,6 +302,8 @@
 				DEVELOPMENT_TEAM = P483V3BFS2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = StudentGPT;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -343,6 +354,14 @@
 				version = 0.3.1;
 			};
 		};
+		E7E093CB2D445EBB002C8F6A /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.5.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -350,6 +369,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E7E093B22D441722002C8F6A /* XCRemoteSwiftPackageReference "OpenAI" */;
 			productName = OpenAI;
+		};
+		E7E093CC2D445EBC002C8F6A /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E7E093CB2D445EBB002C8F6A /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		E7E093CE2D445EBC002C8F6A /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E7E093CB2D445EBB002C8F6A /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
