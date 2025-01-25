@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import LaTeXSwiftUI
 
 struct MessageBubble: View{
     let message: Message
@@ -16,8 +17,9 @@ struct MessageBubble: View{
                 Spacer() // Push the message to the right if it's a user message
             }
             
-            Text(message.text)
-                .padding(10)
+            LaTeX(message.text)
+                .padding()
+                .blockMode(.blockViews)
                 .background(message.isUser ? .gray : .black)
                 .foregroundColor(message.isUser ? .white : .white)
                 .cornerRadius(12)

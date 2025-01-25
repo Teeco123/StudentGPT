@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E7E093B42D441722002C8F6A /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = E7E093B32D441722002C8F6A /* OpenAI */; };
+		E7F0CDF22D45476F0072FC1B /* LaTeXSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = E7F0CDF12D45476F0072FC1B /* LaTeXSwiftUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E7E093B42D441722002C8F6A /* OpenAI in Frameworks */,
+				E7F0CDF22D45476F0072FC1B /* LaTeXSwiftUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = StudentGPT;
 			packageProductDependencies = (
 				E7E093B32D441722002C8F6A /* OpenAI */,
+				E7F0CDF12D45476F0072FC1B /* LaTeXSwiftUI */,
 			);
 			productName = StudentGPT;
 			productReference = E7660BDD2D41C2C90055C10C /* StudentGPT.app */;
@@ -102,6 +105,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E7E093B22D441722002C8F6A /* XCRemoteSwiftPackageReference "OpenAI" */,
+				E7F0CDF02D45476F0072FC1B /* XCRemoteSwiftPackageReference "LaTeXSwiftUI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E7660BDE2D41C2C90055C10C /* Products */;
@@ -343,6 +347,14 @@
 				version = 0.3.1;
 			};
 		};
+		E7F0CDF02D45476F0072FC1B /* XCRemoteSwiftPackageReference "LaTeXSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/colinc86/LaTeXSwiftUI";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -350,6 +362,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E7E093B22D441722002C8F6A /* XCRemoteSwiftPackageReference "OpenAI" */;
 			productName = OpenAI;
+		};
+		E7F0CDF12D45476F0072FC1B /* LaTeXSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E7F0CDF02D45476F0072FC1B /* XCRemoteSwiftPackageReference "LaTeXSwiftUI" */;
+			productName = LaTeXSwiftUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

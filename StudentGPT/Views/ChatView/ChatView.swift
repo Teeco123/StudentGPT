@@ -157,7 +157,7 @@ struct ChatView: View {
     }
     
     func waitForRunCompletion(threadId: String, runId: String, completion: @escaping (Result<RunResult, Error>) -> Void) {
-        let maxRetries = 10
+        let maxRetries = 60
         let retryInterval: TimeInterval = 1.0 // seconds
         var retries = 0
         
