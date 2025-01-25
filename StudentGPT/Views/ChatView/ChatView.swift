@@ -14,10 +14,12 @@ struct ChatView: View {
     
     @State private var inputText: String = ""
     
-    @State private var messages: [Message] = [
-        Message(text: "Hello! Nigga!", isUser: true),
-        Message(text: "Hello! How can I help you?", isUser: false)
-    ]
+    @State private var messages: [Message] = []
+    
+    @State private var currentThreadId: String = ""
+    
+    @State private var threadQuery = ThreadsQuery(messages: [])
+    
     
     var body: some View {
         VStack() {
@@ -40,6 +42,18 @@ struct ChatView: View {
                     }
                 }
             }
+            .onAppear(){
+                openAI.threads(query: threadQuery){ result in
+                    switch result {
+                    case .success(let threadResult):
+                        // Access the 'id' from the result
+                        currentThreadId = threadResult.id
+                        
+                    case .failure(let error):
+                        // Handle the error
+                        print("Error: \(error)")
+                    }
+                }}
             
             HStack(){
                 Image(systemName: "plus.circle")
@@ -71,27 +85,61 @@ struct ChatView: View {
         .background(Color.black)
     }
     
-    private func SendMessage() async{
-        if !inputText.isEmpty{
-            let userMessage = Message(text: inputText, isUser: true)
-            messages.append(userMessage)
-            inputText = ""
-            
-            let chatQuery = ChatQuery(
-                messages: [.init(role: .user, content: userMessage.text)!], model: "gpt-4o-mini")
-            
-            do{
-                let result = try await openAI.chats(query: chatQuery)
-                let gptResponse = result.choices.last?.message.content?.string ?? "Error"
-                let gptMessage = Message(text: gptResponse, isUser: false)
-
-                messages.append(gptMessage)
+    private func SendMessage() async {
+        if !inputText.isEmpty {
+            do {
+                // Append the local user message
+                let userMessage = Message(text: inputText, isUser: true)
+                messages.append(userMessage)
+                
+                // Add message to the chat thread
+                let threadMessage = MessageQuery(role: .user, content: inputText)
+                let addMessageResult = try await withCheckedThrowingContinuation { continuation in
+                    openAI.threadsAddMessage(threadId: currentThreadId, query: threadMessage) { result in
+                        switch result {
+                        case .success(let response):
+                            continuation.resume(returning: response)
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                }
+                
+                // Create a run
+                let runQuery = RunsQuery(assistantId: "asst_dwkAFBuK3xPLS8CgbvpdUR4y")
+                let runResult = try await withCheckedThrowingContinuation { continuation in
+                    openAI.runs(threadId: currentThreadId, query: runQuery) { result in
+                        switch result {
+                        case .success(let response):
+                            continuation.resume(returning: response)
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                }
+                
+                // Fetch updated messages
+                let updatedMessagesResult = try await withCheckedThrowingContinuation { continuation in
+                    openAI.threadsMessages(threadId: currentThreadId) { result in
+                        switch result {
+                        case .success(let response):
+                            continuation.resume(returning: response)
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                }
+                
+                // Clear the input text
+                inputText = ""
             } catch{
-                print("Error")
+                print("Error: Failed sending message to chat thread.")
             }
             
         }
     }
+    
+
     
 }
 
