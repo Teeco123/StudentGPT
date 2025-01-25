@@ -94,7 +94,7 @@ struct ChatView: View {
                 
                 // Add message to the chat thread
                 let threadMessage = MessageQuery(role: .user, content: inputText)
-                let addMessageResult = try await withCheckedThrowingContinuation { continuation in
+                var addMessageResult = try await withCheckedThrowingContinuation { continuation in
                     openAI.threadsAddMessage(threadId: currentThreadId, query: threadMessage) { result in
                         switch result {
                         case .success(let response):
@@ -117,10 +117,9 @@ struct ChatView: View {
                         }
                     }
                 }
-                
-                // Fetch updated messages
-                let updatedMessagesResult = try await withCheckedThrowingContinuation { continuation in
-                    openAI.threadsMessages(threadId: currentThreadId) { result in
+                // Wait for run to complete
+                let waitRunStatus = try await withCheckedThrowingContinuation{ continuation in
+                    waitForRunCompletion(threadId: currentThreadId, runId: runResult.id) { result in
                         switch result {
                         case .success(let response):
                             continuation.resume(returning: response)
@@ -139,11 +138,48 @@ struct ChatView: View {
         }
     }
     
-
-    
+    func waitForRunCompletion(threadId: String, runId: String, completion: @escaping (Result<RunResult, Error>) -> Void) {
+        let maxRetries = 10
+        let retryInterval: TimeInterval = 1.0 // seconds
+        var retries = 0
+        
+        func checkRunStatus() {
+            openAI.runRetrieve(threadId: threadId, runId: runId) { result in
+                switch result {
+                    
+                    // Func success
+                case .success(let runDetails):
+                    // Check success
+                    if runDetails.status == .completed {
+                        completion(.success(runDetails))
+                    }
+                    // Retry check
+                    else if runDetails.status == .inProgress{
+                        if retries < maxRetries {
+                            retries += 1
+                            DispatchQueue.global().asyncAfter(deadline: .now() + retryInterval) {
+                                checkRunStatus()
+                            }
+                        } else {
+                            // To many tries
+                            completion(.failure(NSError(domain: "RunTimeout", code: 408, userInfo: [NSLocalizedDescriptionKey: "Run did not complete within the maximum retry limit."])))
+                        }
+                    } else {
+                        // Error catch
+                        completion(.failure(NSError(domain: "RunError", code: 500, userInfo: [NSLocalizedDescriptionKey: "Unexpected run status: \(runDetails.status)"])))
+                    }
+                    // Func fail
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        }
+        
+        checkRunStatus()
+    }
 }
-
 
 #Preview {
     ChatView()
 }
+
