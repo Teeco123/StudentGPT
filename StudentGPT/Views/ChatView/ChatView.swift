@@ -97,7 +97,7 @@ struct ChatView: View {
                 
                 inputText = "" // Clear text input
                 
-                var addMessageResult = try await withCheckedThrowingContinuation { continuation in
+                let addMessageResult = try await withCheckedThrowingContinuation { continuation in
                     openAI.threadsAddMessage(threadId: currentThreadId, query: threadMessage) { result in
                         switch result {
                         case .success(let response):
@@ -121,7 +121,7 @@ struct ChatView: View {
                     }
                 }
                 // Wait for run to complete
-                let waitRunStatus = try await withCheckedThrowingContinuation{ continuation in
+                var waitRunStatus = try await withCheckedThrowingContinuation{ continuation in
                     waitForRunCompletion(threadId: currentThreadId, runId: runResult.id) { result in
                         switch result {
                         case .success(let response):
