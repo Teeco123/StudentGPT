@@ -32,15 +32,18 @@ struct ChatView: View {
         VStack() {
             Spacer()
             
+            // Chat stack
             VStack(){
                 ScrollViewReader{ scrollViewProxy in
                     ScrollView{
                         VStack(){
+                            // Display messages
                             ForEach(messages){ message in
                                 MessageBubble(message: message)
                             }
                         }
                         .padding()
+                        // Scroll to newest message
                         .onChange(of: messages.count){
                             withAnimation{
                                 scrollViewProxy.scrollTo(messages[messages.count - 1].id, anchor: .bottom)
@@ -49,6 +52,8 @@ struct ChatView: View {
                     }
                 }
             }
+            
+            // Create new thread on appear
             .onAppear(){
                 openAI.threads(query: threadQuery){ result in
                     switch result {
@@ -61,19 +66,24 @@ struct ChatView: View {
                         print("Error: \(error)")
                     }
                 }}
+            
+            // Stack for images
             HStack {
                 ForEach(Array(selectedImages.enumerated()), id: \.offset) { index, image in
                     Image(uiImage: image)
-                        .resizable() // Allow resizing of the image
-                        .aspectRatio(contentMode: .fill) // Scale to fill while maintaining aspect ratio
-                        .frame(width: 65, height: 90) // Set the exact size
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 65, height: 90)
                         .cornerRadius(12)
-                        .clipped() // Ensure anything outside the frame is cropped
+                        .clipped()
                 }
                 Spacer()
             }
             .padding(.horizontal)
+            
+            // Text box stack
             HStack(){
+                // Image button
                 Button(action: {
                      isShowingImagePicker = true
                  }) {
@@ -82,13 +92,19 @@ struct ChatView: View {
                          .padding()
                          .font(.system(size: 20))
                  }
+                
+                // Image picker
                  .sheet(isPresented: $isShowingImagePicker) {
                      PHPickerViewControllerWrapper(selectedImages: $selectedImages)
                  }
+                
+                // Text field
                 TextField("Message...", text: $inputText)
                     .foregroundColor(.white)
                     .padding()
                     .padding(.horizontal, -20.0)
+                
+                // Send button
                 Button(action: {
                     Task{
                         await SendMessage()
@@ -225,7 +241,7 @@ struct PHPickerViewControllerWrapper: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var configuration = PHPickerConfiguration()
         configuration.filter = .images
-        configuration.selectionLimit = 5 // Allow multiple selection
+        configuration.selectionLimit = 5
 
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = context.coordinator
@@ -264,9 +280,10 @@ struct PHPickerViewControllerWrapper: UIViewControllerRepresentable {
                     group.leave()
                 }
             }
-
+            
+            // Replace images when adding again
             group.notify(queue: .main) {
-                self.parent.selectedImages.append(contentsOf: images)
+                self.parent.selectedImages = images
             }
         }
     }
