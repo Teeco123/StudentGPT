@@ -21,7 +21,7 @@ struct ChatView: View {
     
     @State private var threadQuery = ThreadsQuery(messages: [])
     
-    @State private var selectedImage: UIImage? = nil
+    @State private var selectedImages: [UIImage] = []
     
     @State private var isShowingImagePicker = false
     
@@ -61,17 +61,18 @@ struct ChatView: View {
                         print("Error: \(error)")
                     }
                 }}
-            HStack(){
-                if let selectedImage = selectedImage {
-                    Image(uiImage: selectedImage)
-                        .frame(maxWidth: 65, maxHeight: 90)
+            HStack {
+                ForEach(Array(selectedImages.enumerated()), id: \.offset) { index, image in
+                    Image(uiImage: image)
+                        .resizable() // Allow resizing of the image
+                        .aspectRatio(contentMode: .fill) // Scale to fill while maintaining aspect ratio
+                        .frame(width: 65, height: 90) // Set the exact size
                         .cornerRadius(12)
-                        .padding()
-                        .padding(.bottom, -20)
+                        .clipped() // Ensure anything outside the frame is cropped
                 }
                 Spacer()
             }
-            .frame(alignment: .trailing)
+            .padding(.horizontal)
             HStack(){
                 Button(action: {
                      isShowingImagePicker = true
@@ -82,7 +83,7 @@ struct ChatView: View {
                          .font(.system(size: 20))
                  }
                  .sheet(isPresented: $isShowingImagePicker) {
-                     PHPickerViewControllerWrapper(selectedImage: $selectedImage)
+                     PHPickerViewControllerWrapper(selectedImages: $selectedImages)
                  }
                 TextField("Message...", text: $inputText)
                     .foregroundColor(.white)
@@ -219,40 +220,53 @@ struct ChatView: View {
 }
 
 struct PHPickerViewControllerWrapper: UIViewControllerRepresentable {
-    @Binding var selectedImage: UIImage?
-    
+    @Binding var selectedImages: [UIImage]
+
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var configuration = PHPickerConfiguration()
         configuration.filter = .images
-        configuration.selectionLimit = 1
-        
+        configuration.selectionLimit = 5 // Allow multiple selection
+
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = context.coordinator
         return picker
     }
-    
+
     func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-    
+
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
         let parent: PHPickerViewControllerWrapper
-        
+
         init(_ parent: PHPickerViewControllerWrapper) {
             self.parent = parent
         }
-        
+
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             picker.dismiss(animated: true)
-            
-            guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self) else { return }
-            
-            provider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
-                DispatchQueue.main.async {
-                    self?.parent.selectedImage = image as? UIImage
+
+            let group = DispatchGroup()
+            var images: [UIImage] = []
+
+            for result in results {
+                group.enter()
+                if result.itemProvider.canLoadObject(ofClass: UIImage.self) {
+                    result.itemProvider.loadObject(ofClass: UIImage.self) { object, _ in
+                        if let image = object as? UIImage {
+                            images.append(image)
+                        }
+                        group.leave()
+                    }
+                } else {
+                    group.leave()
                 }
+            }
+
+            group.notify(queue: .main) {
+                self.parent.selectedImages.append(contentsOf: images)
             }
         }
     }
