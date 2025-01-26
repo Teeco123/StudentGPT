@@ -17,17 +17,20 @@ struct MessageBubble: View{
                 Spacer() // Push the message to the right if it's a user message
             }
             
-            LaTeX(message.text)
-                .padding()
-                .blockMode(.blockViews)
-                .background(message.isUser ? .gray : .black)
-                .foregroundColor(message.isUser ? .white : .white)
-                .cornerRadius(12)
-                .frame(maxWidth: message.isUser ? 250 : .infinity, alignment: message.isUser ? .trailing : .leading)
-            
-            if !message.isUser {
-                Spacer() // Push the message to the left if it's not a user message
+            if let text = message.text {
+                LaTeX(text)
+                    .padding()
+                    .blockMode(.blockViews)
+                    .background(message.isUser ? .gray : .black)
+                    .foregroundColor(message.isUser ? .white : .white)
+                    .cornerRadius(12)
+                    .frame(maxWidth: message.isUser ? 250 : .infinity, alignment: message.isUser ? .trailing : .leading)
+                
+                if !message.isUser {
+                    Spacer() // Push the message to the left if it's not a user message
+                }
             }
+
         }
     }
 }

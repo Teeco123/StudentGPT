@@ -130,7 +130,7 @@ struct ChatView: View {
         if !inputText.isEmpty {
             do {
                 // Append the local user message
-                let userMessage = Message(text: inputText, isUser: true)
+                let userMessage = Message(type: .text ,text: inputText, isUser: true)
                 messages.append(userMessage)
                 
                 // Add message to the chat thread
@@ -187,7 +187,7 @@ struct ChatView: View {
                 
                 // Add GPT response to local messages
                 let gptResponseText = updatedMessagesResult.data.first?.content[0].text?.value ?? "Error"
-                let gptRepsponseMessage = Message(text: gptResponseText, isUser: false)
+                let gptRepsponseMessage = Message(type: .text ,text: gptResponseText, isUser: false)
                 messages.append(gptRepsponseMessage)
                 
             } catch (let error){

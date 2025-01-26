@@ -6,9 +6,17 @@
 //
 
 import Foundation
+import PhotosUI
+
+enum InputType {
+    case text
+    case image
+}
 
 struct Message: Identifiable {
     var id = UUID()
-    var text: String
+    var type: InputType
+    var text: String?
+    var image: UIImage?
     var isUser: Bool
 }
