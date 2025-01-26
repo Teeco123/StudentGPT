@@ -7,6 +7,7 @@
 
 import SwiftUI
 import OpenAI
+import PhotosUI
 
 struct ChatView: View {
     
@@ -19,6 +20,12 @@ struct ChatView: View {
     @State private var currentThreadId: String = ""
     
     @State private var threadQuery = ThreadsQuery(messages: [])
+    
+    @State private var selectedImage: UIImage? = nil
+    
+    @State private var isShowingImagePicker = false
+    
+    
     
     
     var body: some View {
@@ -54,13 +61,29 @@ struct ChatView: View {
                         print("Error: \(error)")
                     }
                 }}
-            
             HStack(){
-                Image(systemName: "plus.circle")
-                    .foregroundColor(Color.white)
-                    .padding()
-                    .padding(.trailing, -5.0)
-                    .font(.system(size: 20))
+                if let selectedImage = selectedImage {
+                    Image(uiImage: selectedImage)
+                        .frame(maxWidth: 65, maxHeight: 90)
+                        .cornerRadius(12)
+                        .padding()
+                        .padding(.bottom, -20)
+                }
+                Spacer()
+            }
+            .frame(alignment: .trailing)
+            HStack(){
+                Button(action: {
+                     isShowingImagePicker = true
+                 }) {
+                     Image(systemName: "photo")
+                         .foregroundColor(Color.white)
+                         .padding()
+                         .font(.system(size: 20))
+                 }
+                 .sheet(isPresented: $isShowingImagePicker) {
+                     PHPickerViewControllerWrapper(selectedImage: $selectedImage)
+                 }
                 TextField("Message...", text: $inputText)
                     .foregroundColor(.white)
                     .padding()
@@ -80,6 +103,7 @@ struct ChatView: View {
             .background(Color(red: 0.1, green: 0.1, blue: 0.1))
             .cornerRadius(18)
             .padding()
+
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
@@ -97,7 +121,7 @@ struct ChatView: View {
                 
                 inputText = "" // Clear text input
                 
-                let addMessageResult = try await withCheckedThrowingContinuation { continuation in
+                _ = try await withCheckedThrowingContinuation { continuation in
                     openAI.threadsAddMessage(threadId: currentThreadId, query: threadMessage) { result in
                         switch result {
                         case .success(let response):
@@ -121,7 +145,7 @@ struct ChatView: View {
                     }
                 }
                 // Wait for run to complete
-                var waitRunStatus = try await withCheckedThrowingContinuation{ continuation in
+                _ = try await withCheckedThrowingContinuation{ continuation in
                     waitForRunCompletion(threadId: currentThreadId, runId: runResult.id) { result in
                         switch result {
                         case .success(let response):
@@ -191,6 +215,46 @@ struct ChatView: View {
         }
         
         checkRunStatus()
+    }
+}
+
+struct PHPickerViewControllerWrapper: UIViewControllerRepresentable {
+    @Binding var selectedImage: UIImage?
+    
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var configuration = PHPickerConfiguration()
+        configuration.filter = .images
+        configuration.selectionLimit = 1
+        
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        let parent: PHPickerViewControllerWrapper
+        
+        init(_ parent: PHPickerViewControllerWrapper) {
+            self.parent = parent
+        }
+        
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
+            
+            guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self) else { return }
+            
+            provider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
+                DispatchQueue.main.async {
+                    self?.parent.selectedImage = image as? UIImage
+                }
+            }
+        }
     }
 }
 
