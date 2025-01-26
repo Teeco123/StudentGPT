@@ -127,7 +127,7 @@ struct ChatView: View {
     }
     
     private func SendMessage() async {
-        if !inputText.isEmpty {
+        if !inputText.isEmpty || !selectedImages.isEmpty {
             do {
                 // Append the local user message
                 let userMessage = Message(type: .text ,text: inputText, isUser: true)
@@ -137,6 +137,7 @@ struct ChatView: View {
                 let threadMessage = MessageQuery(role: .user, content: inputText)
                 
                 inputText = "" // Clear text input
+                selectedImages = []
                 
                 _ = try await withCheckedThrowingContinuation { continuation in
                     openAI.threadsAddMessage(threadId: currentThreadId, query: threadMessage) { result in
