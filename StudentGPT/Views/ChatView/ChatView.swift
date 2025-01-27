@@ -127,33 +127,41 @@ struct ChatView: View {
     }
     
     private func SendMessage() async {
-        if !inputText.isEmpty || !selectedImages.isEmpty {
-            do {
-                // Append the local user message
-                if !inputText.isEmpty {
-                    let userMessage = Message(type: .text ,text: inputText, isUser: true)
-                    messages.append(userMessage)
-                }
-
-                
-                // Add message to the chat thread
+        do {
+            // Add message to the chat thread
+            if !inputText.isEmpty{
                 let threadMessage = MessageQuery(role: .user, content: inputText)
-                
-                // Uploading images
+                _ = try await withCheckedThrowingContinuation { continuation in
+                    openAI.threadsAddMessage(threadId: currentThreadId, query: threadMessage) { result in
+                        switch result {
+                        case .success(let response):
+                            continuation.resume(returning: response)
+                            
+                            // Add message to local messages
+                            let userMessage = Message(type: .text ,text: inputText, isUser: true)
+                            messages.append(userMessage)
+                            inputText = ""
+                        case .failure(let error):
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                }
+            }
+            
+            // Uploading images
+            if !selectedImages.isEmpty{
+                var tempImageArray: [UIImage] = []
                 for imageArray in selectedImages {
                     if let image = imageArray.jpegData(compressionQuality: 1.0){
                         let fileQuery = FilesQuery(purpose: "vision", file: image, fileName: UUID().uuidString + ".png", contentType: "image/jpeg")
-                        let fileId = try await withCheckedThrowingContinuation{ continuation in
+                        _ = try await withCheckedThrowingContinuation{ continuation in
                             openAI.files(query: fileQuery){ result in
                                 switch result {
                                 case .success(let response):
                                     continuation.resume(returning: response)
                                     
-                                    // Add images to local messages
-                                    if !selectedImages.isEmpty{
-                                        let userImages = Message(type: .image, images: selectedImages, isUser: true)
-                                        messages.append(userImages)
-                                    }
+                                    // Add images to temp array
+                                    tempImageArray.append(imageArray)
                                 case .failure(let error):
                                     continuation.resume(throwing: error)
                                 }
@@ -161,65 +169,59 @@ struct ChatView: View {
                         }
                     }
                 }
-                inputText = "" // Clear text input
-                selectedImages = []
                 
-                _ = try await withCheckedThrowingContinuation { continuation in
-                    openAI.threadsAddMessage(threadId: currentThreadId, query: threadMessage) { result in
-                        switch result {
-                        case .success(let response):
-                            continuation.resume(returning: response)
-                        case .failure(let error):
-                            continuation.resume(throwing: error)
-                        }
-                    }
+                // Add images to local messages
+                if !tempImageArray.isEmpty {
+                    let userImages = Message(type: .image, images: selectedImages, isUser: true)
+                    messages.append(userImages)
+                    selectedImages = []
                 }
-                
-                // Create a run
-                let runQuery = RunsQuery(assistantId: "asst_dwkAFBuK3xPLS8CgbvpdUR4y")
-                let runResult = try await withCheckedThrowingContinuation { continuation in
-                    openAI.runs(threadId: currentThreadId, query: runQuery) { result in
-                        switch result {
-                        case .success(let response):
-                            continuation.resume(returning: response)
-                        case .failure(let error):
-                            continuation.resume(throwing: error)
-                        }
-                    }
-                }
-                // Wait for run to complete
-                _ = try await withCheckedThrowingContinuation{ continuation in
-                    waitForRunCompletion(threadId: currentThreadId, runId: runResult.id) { result in
-                        switch result {
-                        case .success(let response):
-                            continuation.resume(returning: response)
-                        case .failure(let error):
-                            continuation.resume(throwing: error)
-                        }
-                    }
-                }
-                
-                // Fetch updated messages
-                let updatedMessagesResult = try await withCheckedThrowingContinuation { continuation in
-                    openAI.threadsMessages(threadId: currentThreadId) { result in
-                        switch result {
-                        case .success(let response):
-                            continuation.resume(returning: response)
-                        case .failure(let error):
-                            continuation.resume(throwing: error)
-                        }
-                    }
-                }
-                
-                // Add GPT response to local messages
-                let gptResponseText = updatedMessagesResult.data.first?.content[0].text?.value ?? "Error"
-                let gptRepsponseMessage = Message(type: .text ,text: gptResponseText, isUser: false)
-                messages.append(gptRepsponseMessage)
-                
-            } catch (let error){
-                print(error)
             }
             
+            // Create a run
+            let runQuery = RunsQuery(assistantId: "asst_dwkAFBuK3xPLS8CgbvpdUR4y")
+            let runResult = try await withCheckedThrowingContinuation { continuation in
+                openAI.runs(threadId: currentThreadId, query: runQuery) { result in
+                    switch result {
+                    case .success(let response):
+                        continuation.resume(returning: response)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+            
+            // Wait for run to complete
+            _ = try await withCheckedThrowingContinuation{ continuation in
+                waitForRunCompletion(threadId: currentThreadId, runId: runResult.id) { result in
+                    switch result {
+                    case .success(let response):
+                        continuation.resume(returning: response)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+            
+            // Fetch updated messages
+            let updatedMessagesResult = try await withCheckedThrowingContinuation { continuation in
+                openAI.threadsMessages(threadId: currentThreadId) { result in
+                    switch result {
+                    case .success(let response):
+                        continuation.resume(returning: response)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+            
+            // Add GPT response to local messages
+            let gptResponseText = updatedMessagesResult.data.first?.content[0].text?.value ?? "Error"
+            let gptRepsponseMessage = Message(type: .text ,text: gptResponseText, isUser: false)
+            messages.append(gptRepsponseMessage)
+            
+        } catch (let error){
+            print(error)
         }
     }
     
@@ -289,10 +291,10 @@ struct PHPickerViewControllerWrapper: UIViewControllerRepresentable {
         
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             picker.dismiss(animated: true)
-
+            
             let group = DispatchGroup()
             var images: [UIImage] = []
-
+            
             for result in results {
                 group.enter()
                 if result.itemProvider.canLoadObject(ofClass: UIImage.self) {
