@@ -17,6 +17,6 @@ struct Message: Identifiable {
     var id = UUID()
     var type: InputType
     var text: String?
-    var image: UIImage?
+    var images: [UIImage]?
     var isUser: Bool
 }

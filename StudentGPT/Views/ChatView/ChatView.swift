@@ -85,18 +85,18 @@ struct ChatView: View {
             HStack(){
                 // Image button
                 Button(action: {
-                     isShowingImagePicker = true
-                 }) {
-                     Image(systemName: "photo")
-                         .foregroundColor(Color.white)
-                         .padding()
-                         .font(.system(size: 20))
-                 }
+                    isShowingImagePicker = true
+                }) {
+                    Image(systemName: "photo")
+                        .foregroundColor(Color.white)
+                        .padding()
+                        .font(.system(size: 20))
+                }
                 
                 // Image picker
-                 .sheet(isPresented: $isShowingImagePicker) {
-                     PHPickerViewControllerWrapper(selectedImages: $selectedImages)
-                 }
+                .sheet(isPresented: $isShowingImagePicker) {
+                    PHPickerViewControllerWrapper(selectedImages: $selectedImages)
+                }
                 
                 // Text field
                 TextField("Message...", text: $inputText)
@@ -120,7 +120,6 @@ struct ChatView: View {
             .background(Color(red: 0.1, green: 0.1, blue: 0.1))
             .cornerRadius(18)
             .padding()
-
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
@@ -130,8 +129,16 @@ struct ChatView: View {
         if !inputText.isEmpty || !selectedImages.isEmpty {
             do {
                 // Append the local user message
-                let userMessage = Message(type: .text ,text: inputText, isUser: true)
-                messages.append(userMessage)
+                if !inputText.isEmpty {
+                    let userMessage = Message(type: .text ,text: inputText, isUser: true)
+                    messages.append(userMessage)
+                }
+                
+                // Append images
+                if !selectedImages.isEmpty{
+                    let userImages = Message(type: .image, images: selectedImages, isUser: true)
+                    messages.append(userImages)
+                }
                 
                 // Add message to the chat thread
                 let threadMessage = MessageQuery(role: .user, content: inputText)
@@ -238,30 +245,30 @@ struct ChatView: View {
 
 struct PHPickerViewControllerWrapper: UIViewControllerRepresentable {
     @Binding var selectedImages: [UIImage]
-
+    
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var configuration = PHPickerConfiguration()
         configuration.filter = .images
         configuration.selectionLimit = 5
-
+        
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = context.coordinator
         return picker
     }
-
+    
     func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
-
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-
+    
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
         let parent: PHPickerViewControllerWrapper
-
+        
         init(_ parent: PHPickerViewControllerWrapper) {
             self.parent = parent
         }
-
+        
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             picker.dismiss(animated: true)
 
