@@ -5,6 +5,7 @@
 //  Created by Kacper on 23/01/2025.
 //
 
+import Foundation
 import SwiftUI
 import OpenAI
 import PhotosUI
@@ -133,16 +134,33 @@ struct ChatView: View {
                     let userMessage = Message(type: .text ,text: inputText, isUser: true)
                     messages.append(userMessage)
                 }
-                
-                // Append images
-                if !selectedImages.isEmpty{
-                    let userImages = Message(type: .image, images: selectedImages, isUser: true)
-                    messages.append(userImages)
-                }
+
                 
                 // Add message to the chat thread
                 let threadMessage = MessageQuery(role: .user, content: inputText)
                 
+                // Uploading images
+                for imageArray in selectedImages {
+                    if let image = imageArray.jpegData(compressionQuality: 1.0){
+                        let fileQuery = FilesQuery(purpose: "vision", file: image, fileName: UUID().uuidString + ".png", contentType: "image/jpeg")
+                        let fileId = try await withCheckedThrowingContinuation{ continuation in
+                            openAI.files(query: fileQuery){ result in
+                                switch result {
+                                case .success(let response):
+                                    continuation.resume(returning: response)
+                                    
+                                    // Add images to local messages
+                                    if !selectedImages.isEmpty{
+                                        let userImages = Message(type: .image, images: selectedImages, isUser: true)
+                                        messages.append(userImages)
+                                    }
+                                case .failure(let error):
+                                    continuation.resume(throwing: error)
+                                }
+                            }
+                        }
+                    }
+                }
                 inputText = "" // Clear text input
                 selectedImages = []
                 
